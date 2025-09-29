@@ -1,5 +1,6 @@
 # Experiment 4: Timing Validation of Flip-Flop Input using Random Data Generator for Setup and Hold Constraints
-
+## Giri R
+## 21223060068
 ---
 
 ## Aim  
@@ -80,58 +81,69 @@ In this experiment:
 ### Flip-Flop Design (`flipflop.sv`)
 ```systemverilog
 module flipflop (
-    input  logic D,       // Data input
-    input  logic CLK,     // Clock
-    output logic Q        // Flip-Flop output
+    input  logic D,       
+    input  logic CLK,     
+    output logic Q        
 );
 
-    // Implement Flip-Flop behavior
-    // Include D flip-flop logic
+    always_ff @(posedge CLK) begin
+        Q <= D;
+    end
+
 endmodule
 ```
 ### Testbench (`flipflop_tb.sv`)
 ```systemverilog
-module flipflop_tb;
-
-    // Declare signals
-    logic D, CLK;
+module tb;
+    logic D;
+    logic CLK;
     logic Q;
 
-    // Instantiate Flip-Flop
+    parameter setup_time = 2;
+    parameter hold_time  = 1;
+
     flipflop uut (
         .D(D),
         .CLK(CLK),
         .Q(Q)
     );
 
-    // Random input generation and clock
     initial begin
         CLK = 0;
-        forever #5 CLK = ~CLK; // Clock generation
+        forever #5 CLK = ~CLK;
     end
 
     initial begin
-        // Apply random data to D
-        // Example:
-        // repeat(20) begin
-        //   D = $urandom_range(0,1);
-        //   #10;
-        // end
-        $stop; // End simulation
+        D = 0;
+        repeat (20) begin
+            int delay;
+            delay = $urandom_range(1, 9); 
+            #(delay) D = $urandom_range(0, 15);  
+
+            if (($time % 10) > (10 - setup_time) && ($time % 10) < 10) begin
+                $display("**Setup violation at %0t", $time);
+            end
+
+            #(hold_time)
+            if (($time % 10) < hold_time) begin
+                $display("**Hold violation at %0t", $time);
+            end
+        end
+        #50 $finish;
     end
 
+    initial begin
+        $dumpfile("wave.vcd");
+        $dumpvars(0, tb);
+    end
 endmodule
+
 ```
 ---
 ### Simulation Output
 
 Simulation is carried out using ModelSim 2020.1.
-
-Waveforms will show Flip-Flop input, clock, and output.
-
-Verify setup and hold constraints for all random input patterns.
-
-(Insert waveform screenshot here after running simulation in ModelSim)
+<img width="1920" height="1080" alt="Screenshot 2025-09-29 232424" src="https://github.com/user-attachments/assets/71720e3c-c876-46ff-893d-b21aac51aee7" />
 
 ---
 
