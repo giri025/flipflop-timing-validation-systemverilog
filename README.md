@@ -4,9 +4,7 @@
 ---
 
 ## Aim  
-To validate the **timing of a Flip-Flop input** using **random data generation** in **SystemVerilog** and check **setup and hold constraints** using **ModelSim 2020.1**.
-
----
+To validate the timing of a Flip-Flop input using random data generation in SystemVerilog and check setup and hold constraints using Eda playground.
 
 ## Apparatus Required  
 - Computer with **Windows OS**  
@@ -144,7 +142,9 @@ endmodule
 ---
 ### Simulation Output
 
-Simulation is carried out using ModelSim 2020.1.
+Simulation is carried out using EDA playground
+
+Verify setup and hold constraints for all random input patterns
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/9675e082-a6f5-4d33-9b4d-70229ece7af4" />
 
 
