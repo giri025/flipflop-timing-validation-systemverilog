@@ -80,70 +80,73 @@ In this experiment:
 
 ### Flip-Flop Design (`flipflop.sv`)
 ```systemverilog
-module flipflop (
-    input  logic D,       
-    input  logic CLK,     
-    output logic Q        
-);
+module dff(D, clk, Q);
+  input  logic D;
+  input  logic clk;
+  output logic Q;
 
-    always_ff @(posedge CLK) begin
-        Q <= D;
-    end
-
+  always_ff @(posedge clk) 
+    Q <= D;
 endmodule
+
+class RandDelay;
+  rand int rand_delay;
+  constraint c_range { rand_delay inside {[-3:3]}; }
+endclass
 ```
 ### Testbench (`flipflop_tb.sv`)
 ```systemverilog
-module tb;
-    logic D;
-    logic CLK;
-    logic Q;
+module tb_dff;
+  logic D, clk, Q;
+  RandDelay rg;
+  parameter t_setup = 2;
+  parameter t_hold  = 1;
 
-    parameter setup_time = 2;
-    parameter hold_time  = 1;
+  dff uut(.D(D), .clk(clk), .Q(Q));
 
-    flipflop uut (
-        .D(D),
-        .CLK(CLK),
-        .Q(Q)
-    );
+  initial begin
+    $dumpfile("wave.vcd");
+    $dumpvars(0, tb_dff);
+  end
 
-    initial begin
-        CLK = 0;
-        forever #5 CLK = ~CLK;
+  initial begin
+    clk = 0;
+  end
+
+  always #5 clk = ~clk;
+
+  initial begin
+    D = 0;
+    rg = new();
+    repeat (10) begin
+      if (!rg.randomize()) begin
+        $error("Randomization failed!");
+      end
+
+      @(posedge clk);
+      #(rg.rand_delay) D = $urandom() % 2;
+
+      if (rg.rand_delay < -t_setup)
+        $display("[%0t] SETUP VIOLATION: Data changed %0d ns before clk edge", 
+                  $time, rg.rand_delay);
+
+      else if (rg.rand_delay >= 0 && rg.rand_delay < t_hold)
+        $display("[%0t] HOLD VIOLATION: Data changed %0d ns after clk edge", 
+                  $time, rg.rand_delay);
+
+      else
+        $display("[%0t] OK: Data stable within setup/hold window", $time);
     end
-
-    initial begin
-        D = 0;
-        repeat (20) begin
-            int delay;
-            delay = $urandom_range(1, 9); 
-            #(delay) D = $urandom_range(0, 15);  
-
-            if (($time % 10) > (10 - setup_time) && ($time % 10) < 10) begin
-                $display("**Setup violation at %0t", $time);
-            end
-
-            #(hold_time)
-            if (($time % 10) < hold_time) begin
-                $display("**Hold violation at %0t", $time);
-            end
-        end
-        #50 $finish;
-    end
-
-    initial begin
-        $dumpfile("wave.vcd");
-        $dumpvars(0, tb);
-    end
+    $finish;
+  end
 endmodule
-
 ```
 ---
 ### Simulation Output
 
 Simulation is carried out using ModelSim 2020.1.
-<img width="1920" height="1080" alt="Screenshot 2025-09-29 232424" src="https://github.com/user-attachments/assets/71720e3c-c876-46ff-893d-b21aac51aee7" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/9675e082-a6f5-4d33-9b4d-70229ece7af4" />
+
 
 ---
 
